@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -32,7 +32,7 @@ type RegisterFormData = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signUpUser } = useAuth();
+  const { user, isLoading, signUpUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RegisterFormData>({
@@ -43,15 +43,21 @@ export default function RegisterPage() {
     },
   });
 
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
   async function onSubmit(values: RegisterFormData) {
     setIsSubmitting(true);
     try {
       await signUpUser(values.email, values.password);
       toast({
         title: "Usuário Cadastrado!",
-        description: "O novo usuário foi criado com sucesso.",
+        description: "O novo usuário foi criado com sucesso. Você será redirecionado para o login.",
       });
-      form.reset(); // Limpa o formulário após o sucesso
+      router.push("/login");
     } catch (error: any) {
       console.error("Failed to sign up:", error);
       const errorMessage = error.code === 'auth/email-already-in-use'
@@ -66,6 +72,14 @@ export default function RegisterPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isLoading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+      </div>
+    );
   }
 
   return (

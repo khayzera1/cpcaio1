@@ -1,7 +1,7 @@
 
 'use client';
 
-import { AuthProvider, AuthGuard } from '@/hooks/use-auth';
+import { AuthProvider } from '@/hooks/use-auth';
 import type { ReactNode } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 
@@ -9,9 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 export default function SessionProvider({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
-      <AuthGuard>
-        {children}
-      </AuthGuard>
+      {children}
       <Toaster />
     </AuthProvider>
   );

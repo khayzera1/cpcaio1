@@ -4,10 +4,10 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from './ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 
 export function Header({ children }: { children?: ReactNode }) {
-  const { user, signOutUser } = useAuth();
+  const { user, isLoading, signOutUser } = useAuth();
   
   return (
     <header className="bg-card border-b sticky top-0 z-10">
@@ -16,14 +16,16 @@ export function Header({ children }: { children?: ReactNode }) {
           <div className="flex items-center gap-4">
             {children}
           </div>
-          {user && (
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : user ? (
             <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">Olá, {user.email}</span>
-                <Button variant="ghost" size="icon" onClick={signOutUser}>
+                <span className="text-sm text-muted-foreground hidden sm:inline">Olá, {user.email}</span>
+                <Button variant="ghost" size="icon" onClick={signOutUser} aria-label="Sair">
                     <LogOut className="h-4 w-4"/>
                 </Button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

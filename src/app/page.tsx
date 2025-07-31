@@ -11,7 +11,7 @@ import { UserPlus, Users, Search, Contact, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { getClients } from "@/services/client-service";
-
+import { AuthGuard } from "@/components/auth-guard";
 
 const getInitials = (name: string) => {
     const names = name.split(' ');
@@ -21,8 +21,7 @@ const getInitials = (name: string) => {
     return name.substring(0, 2).toUpperCase();
 };
 
-
-function HomePage() {
+function HomePageContent() {
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -120,4 +119,10 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default function HomePage() {
+    return (
+        <AuthGuard>
+            <HomePageContent />
+        </AuthGuard>
+    );
+}

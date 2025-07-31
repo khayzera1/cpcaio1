@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { addClient } from "@/services/client-service";
+import { AuthGuard } from "@/components/auth-guard";
 
 const formSchema = z.object({
   clientName: z.string().min(2, {
@@ -32,7 +33,7 @@ const formSchema = z.object({
 
 export type NewClientFormData = z.infer<typeof formSchema>;
 
-function NewClientPage() {
+function NewClientPageContent() {
     const router = useRouter();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,4 +124,10 @@ function NewClientPage() {
     );
 }
 
-export default NewClientPage;
+export default function NewClientPage() {
+    return (
+        <AuthGuard>
+            <NewClientPageContent />
+        </AuthGuard>
+    );
+}
