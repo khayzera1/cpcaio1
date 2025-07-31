@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { addClient } from "@/services/client-service";
-import AuthGuard from "@/components/auth-guard";
+import { AuthGuard } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   clientName: z.string().min(2, {
