@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -32,7 +31,7 @@ type RegisterFormData = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, signUpUser, isLoading } = useAuth();
+  const { signUpUser } = useAuth();
   
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(formSchema),
@@ -41,14 +40,12 @@ export default function RegisterPage() {
       password: "",
     },
   });
-  
-  useEffect(() => {
-    if (!isLoading && user) {
-      router.push('/');
-    }
-  }, [user, isLoading, router]);
 
   async function onSubmit(values: RegisterFormData) {
+    if (!signUpUser) {
+        toast({ variant: "destructive", title: "Erro", description: "Função de cadastro não está disponível."});
+        return;
+    }
     try {
       await signUpUser(values.email, values.password);
       toast({
@@ -68,14 +65,6 @@ export default function RegisterPage() {
         description: errorMessage,
       });
     }
-  }
-
-  if (isLoading || (!isLoading && user)) {
-     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
-      </div>
-    );
   }
 
   return (

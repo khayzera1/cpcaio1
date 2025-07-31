@@ -7,36 +7,50 @@ import {
     useContext, 
     ReactNode,
     useCallback,
-    useMemo
+    useMemo,
 } from 'react';
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth, User, onAuthStateChanged } from "firebase/auth";
 import * as AuthService from '@/services/auth-service';
 import * as ClientService from '@/services/client-service';
-import { NewClientFormData } from '@/components/clients/new-client-page';
+import { NewClientFormData } from '@/app/clients/new/page';
+import type { Client } from '@/lib/types';
 
 
-// 1. Defina a Interface do Contexto
 interface AuthContextType {
-  user: User | null;
+  user: User | null | undefined; // undefined while loading, null if not logged in
   isLoading: boolean;
-  signInUser: typeof AuthService.signIn;
-  signUpUser: typeof AuthService.signUp;
-  signOutUser: () => Promise<void>;
-  addClient: (clientData: NewClientFormData) => Promise<string>;
-  getClients: () => Promise<any[]>;
+  isClientsLoading: boolean;
+  clients: Client[] | null;
+  signInUser?: typeof AuthService.signIn;
+  signUpUser?: typeof AuthService.signUp;
+  signOutUser?: () => Promise<void>;
+  addClient?: (clientData: NewClientFormData) => Promise<string>;
 }
 
-// 2. Crie o Contexto
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+    user: undefined,
+    isLoading: true,
+    isClientsLoading: true,
+    clients: null,
+});
 
-// 3. Crie o Provedor do Contexto
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+// This is the actual hook components will use
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+
+// This is the provider component that will wrap the app
+export const AuthProviderContent = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(); // undefined on initial load
   const [isLoading, setIsLoading] = useState(true);
+  const [clients, setClients] = useState<Client[] | null>(null);
+  const [isClientsLoading, setIsClientsLoading] = useState(true);
   
-  const { app, auth, db } = useMemo(() => {
+  // Memoize Firebase initialization to prevent re-renders
+  const { auth, db } = useMemo(() => {
     const firebaseConfig = {
         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
         authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -48,9 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const db = getFirestore(app);
-    return { app, auth, db };
+    return { auth, db };
   }, []);
   
+  // Effect to handle auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -58,7 +73,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => unsubscribe();
   }, [auth]);
+
+  // Effect to fetch clients when user is logged in
+  useEffect(() => {
+    if (user) {
+      setIsClientsLoading(true);
+      ClientService.getClients(db)
+        .then(setClients)
+        .catch(error => {
+            console.error("Error fetching clients:", error);
+            setClients(null);
+        })
+        .finally(() => setIsClientsLoading(false));
+    } else {
+        setClients(null); // Clear clients on logout
+    }
+  }, [user, db]);
   
+  // Memoized auth functions
   const signOutUser = useCallback(async () => {
     try {
       await AuthService.logOut(auth);
@@ -71,20 +103,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return ClientService.addClient(db, clientData);
   }, [db]);
 
-  const getClients = useCallback(() => {
-    return ClientService.getClients(db);
-  }, [db]);
+  const signInUser = useCallback((email, password) => {
+      return AuthService.signIn(auth, email, password);
+  }, [auth]);
+
+  const signUpUser = useCallback((email, password) => {
+      return AuthService.signUp(auth, email, password);
+  }, [auth]);
 
 
-  const value = {
+  // The value provided to the context consumers
+  const value: AuthContextType = useMemo(() => ({
     user,
     isLoading,
-    signInUser: (email, password) => AuthService.signIn(auth, email, password),
-    signUpUser: (email, password) => AuthService.signUp(auth, email, password),
+    clients,
+    isClientsLoading,
+    signInUser,
+    signUpUser,
     signOutUser,
     addClient,
-    getClients,
-  };
+  }), [user, isLoading, clients, isClientsLoading, signInUser, signUpUser, signOutUser, addClient]);
 
   return (
     <AuthContext.Provider value={value}>
@@ -92,12 +130,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-// 4. Crie o Hook Customizado
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};

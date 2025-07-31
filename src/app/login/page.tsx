@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -31,7 +30,7 @@ type LoginFormData = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const { toast } = useToast();
-  const { user, signInUser, isLoading } = useAuth();
+  const { signInUser } = useAuth();
   const router = useRouter();
 
   const form = useForm<LoginFormData>({
@@ -42,14 +41,11 @@ export default function LoginPage() {
     },
   });
 
-  useEffect(() => {
-    if (!isLoading && user) {
-      router.push('/');
-    }
-  }, [user, isLoading, router]);
-
-
   async function onSubmit(values: LoginFormData) {
+    if (!signInUser) {
+        toast({ variant: "destructive", title: "Erro", description: "Função de login não está disponível."});
+        return;
+    }
     try {
       await signInUser(values.email, values.password);
       toast({
@@ -68,14 +64,6 @@ export default function LoginPage() {
         description: errorMessage,
       });
     }
-  }
-
-  if (isLoading || (!isLoading && user)) {
-     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
-      </div>
-    );
   }
   
   return (

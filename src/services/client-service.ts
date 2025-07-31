@@ -1,6 +1,7 @@
 import { collection, addDoc, getDocs, query, Firestore } from "firebase/firestore";
 import type { Client } from "@/lib/types";
-import type { NewClientFormData } from "@/components/clients/new-client-page";
+import type { NewClientFormData } from "@/app/clients/new/page";
+
 
 const CLIENTS_COLLECTION = 'clients';
 

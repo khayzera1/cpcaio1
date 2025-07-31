@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import type { Client } from "@/lib/types";
@@ -10,9 +10,9 @@ import { UserPlus, Users, Search, Contact, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from "next/navigation";
 
 const getInitials = (name: string) => {
+    if (!name) return '';
     const names = name.split(' ');
     if (names.length > 1) {
         return `${names[0][0]}${names[1][0]}`.toUpperCase();
@@ -21,50 +21,19 @@ const getInitials = (name: string) => {
 };
 
 export default function Home() {
-  const { user, isLoading, getClients } = useAuth();
-  const router = useRouter();
-  const [clients, setClients] = useState<Client[]>([]);
+  const { user, signOutUser, clients, isClientsLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFetchingClients, setIsFetchingClients] = useState(true);
   
-  useEffect(() => {
-    if (isLoading) return;
-    if (!user) {
-        router.push('/login');
-        return;
-    }
-
-    const fetchClients = async () => {
-      setIsFetchingClients(true);
-      try {
-        const clientList = await getClients();
-        setClients(clientList);
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      } finally {
-        setIsFetchingClients(false);
-      }
-    };
-    fetchClients();
-  }, [user, isLoading, router, getClients]);
-
   const filteredClients = useMemo(() => {
+    if (!clients) return [];
     return clients.filter(client =>
       client.clientName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [clients, searchTerm]);
 
-  if (isLoading || !user) {
-    return (
-        <div className="min-h-screen flex items-center justify-center">
-            <Loader2 className="h-16 w-16 text-primary animate-spin" />
-        </div>
-    );
-  }
-
   return (
       <div className="min-h-screen bg-background text-foreground">
-        <Header />
+        <Header user={user} onSignOut={signOutUser} />
         <main className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-3">
@@ -93,7 +62,7 @@ export default function Home() {
           </div>
           </div>
 
-          {isFetchingClients ? (
+          {isClientsLoading ? (
             <div className="flex justify-center items-center py-20">
               <Loader2 className="h-16 w-16 text-primary animate-spin" />
             </div>
@@ -115,9 +84,9 @@ export default function Home() {
                   <Users className="mx-auto h-16 w-16 text-muted-foreground" />
                   <h3 className="mt-4 text-xl font-medium text-foreground">Nenhum cliente encontrado</h3>
                   <p className="mt-2 text-md text-muted-foreground">
-                      {clients.length > 0 ? "Tente um termo de busca diferente." : "Comece adicionando um novo cliente."}
+                      {clients && clients.length > 0 ? "Tente um termo de busca diferente." : "Comece adicionando um novo cliente."}
                   </p>
-                  {clients.length === 0 && (
+                  {(!clients || clients.length === 0) && (
                     <div className="mt-8">
                         <Link href="/clients/new">
                             <Button size="lg">
