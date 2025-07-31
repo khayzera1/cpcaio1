@@ -20,10 +20,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
+    setIsClient(true);
     const unsubscribe = onAuthChange((user) => {
       setUser(user);
       setIsLoading(false);
@@ -44,10 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/login');
   };
 
-  if (isLoading) {
+  if (isLoading || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+        {isClient && <Loader2 className="h-16 w-16 text-primary animate-spin" />}
       </div>
     );
   }
@@ -72,17 +73,22 @@ export const useAuth = () => {
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !isLoading && !user) {
       router.push('/login');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, isClient]);
   
-  if (isLoading || !user) {
+  if (!isClient || isLoading || !user) {
      return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+        {isClient && <Loader2 className="h-16 w-16 text-primary animate-spin" />}
       </div>
     );
   }
