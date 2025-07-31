@@ -1,15 +1,14 @@
 'use client';
 
+import { useAuth } from '@/hooks/use-auth';
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
-import type { Client } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Search, Contact, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { useAuth } from '@/hooks/use-auth';
 
 const getInitials = (name: string) => {
     if (!name) return '';

@@ -1,4 +1,5 @@
-import { collection, addDoc, getDocs, query, Firestore } from "firebase/firestore";
+
+import { collection, addDoc, getDocs, query, type Firestore } from "firebase/firestore";
 import type { Client } from "@/lib/types";
 import type { NewClientFormData } from "@/app/clients/new/page";
 

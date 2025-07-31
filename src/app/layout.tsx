@@ -1,23 +1,16 @@
-'use client';
 
 import './globals.css';
 import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 import { Toaster } from "@/components/ui/toaster";
-import dynamic from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
-import { AuthProviderContent } from '@/hooks/use-auth';
-
-const AuthGuard = dynamic(() => import('@/components/auth-guard'), {
-  ssr: false,
-   loading: () => (
-     <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
-      </div>
-  )
-});
-
+import { ClientProvider } from '@/components/client-provider';
 
 const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Painel de Clientes',
+  description: 'Gerado pelo Firebase Studio',
+};
 
 export default function RootLayout({
   children,
@@ -26,17 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.className}>
-       <head>
-        <title>Painel de Clientes</title>
-        <meta name="description" content="Gerado pelo Firebase Studio" />
-      </head>
       <body className="antialiased">
-          <AuthProviderContent>
-            <AuthGuard>
-              {children}
-            </AuthGuard>
-          </AuthProviderContent>
-          <Toaster />
+        <ClientProvider>
+          {children}
+        </ClientProvider>
+        <Toaster />
       </body>
     </html>
   );

@@ -5,16 +5,14 @@ import { LogOut } from 'lucide-react';
 import type { User } from 'firebase/auth';
 
 interface HeaderProps {
-    user: User | null | undefined;
-    onSignOut: (() => Promise<void>) | undefined;
+    user: User | null;
+    onSignOut: () => Promise<void>;
 }
 
 export function Header({ user, onSignOut }: HeaderProps) {
   
   const handleSignOut = async () => {
-    if (onSignOut) {
-      await onSignOut();
-    }
+    await onSignOut();
   }
   
   return (

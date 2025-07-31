@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -42,10 +43,6 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: LoginFormData) {
-    if (!signInUser) {
-        toast({ variant: "destructive", title: "Erro", description: "Função de login não está disponível."});
-        return;
-    }
     try {
       await signInUser(values.email, values.password);
       toast({

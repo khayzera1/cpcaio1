@@ -1,3 +1,4 @@
+
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
@@ -5,7 +6,8 @@ import {
   type Auth
 } from "firebase/auth";
 
-// Wrappers para as funções de autenticação do Firebase que recebem a instância 'auth'
+// Wrappers para as funções de autenticação do Firebase
+// Elas agora recebem a instância 'auth' como parâmetro
 
 export const signUp = (auth: Auth, email: string, password: string) => {
   return createUserWithEmailAndPassword(auth, email, password);

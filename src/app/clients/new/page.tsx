@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,9 +49,6 @@ export default function NewClientPage() {
     async function onSubmit(values: NewClientFormData) {
         setIsSubmitting(true);
         try {
-            if (!addClient) {
-                 throw new Error("Add client function is not available");
-            }
             await addClient(values);
             toast({
                 title: "Cliente Cadastrado com Sucesso!",

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -42,10 +43,6 @@ export default function RegisterPage() {
   });
 
   async function onSubmit(values: RegisterFormData) {
-    if (!signUpUser) {
-        toast({ variant: "destructive", title: "Erro", description: "Função de cadastro não está disponível."});
-        return;
-    }
     try {
       await signUpUser(values.email, values.password);
       toast({
