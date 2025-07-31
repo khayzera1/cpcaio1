@@ -1,13 +1,11 @@
-
-import { db } from "@/lib/firebase-config";
-import { collection, addDoc, getDocs, doc, query } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, Firestore } from "firebase/firestore";
 import type { Client } from "@/lib/types";
-import type { NewClientFormData } from "@/app/clients/new/page";
+import type { NewClientFormData } from "@/components/clients/new-client-page";
 
 const CLIENTS_COLLECTION = 'clients';
 
-// Function to add a new client to Firestore
-export async function addClient(clientData: NewClientFormData): Promise<string> {
+// Function to add a new client to Firestore, receiving the 'db' instance
+export async function addClient(db: Firestore, clientData: NewClientFormData): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, CLIENTS_COLLECTION), {
       clientName: clientData.clientName,
@@ -20,8 +18,8 @@ export async function addClient(clientData: NewClientFormData): Promise<string> 
   }
 }
 
-// Function to get all clients from Firestore
-export async function getClients(): Promise<Client[]> {
+// Function to get all clients from Firestore, receiving the 'db' instance
+export async function getClients(db: Firestore): Promise<Client[]> {
   try {
     const q = query(collection(db, CLIENTS_COLLECTION));
     const querySnapshot = await getDocs(q);

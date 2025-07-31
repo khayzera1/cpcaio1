@@ -1,27 +1,20 @@
-
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut,
-  onAuthStateChanged,
-  type User
+  type Auth
 } from "firebase/auth";
-import { auth } from "@/lib/firebase-config";
 
-// Wrappers para as funções de autenticação do Firebase
+// Wrappers para as funções de autenticação do Firebase que recebem a instância 'auth'
 
-export const signUp = (email: string, password: string) => {
+export const signUp = (auth: Auth, email: string, password: string) => {
   return createUserWithEmailAndPassword(auth, email, password);
 };
 
-export const signIn = (email: string, password: string) => {
+export const signIn = (auth: Auth, email: string, password: string) => {
   return signInWithEmailAndPassword(auth, email, password);
 };
 
-export const logOut = () => {
+export const logOut = (auth: Auth) => {
   return signOut(auth);
-};
-
-export const onAuthChange = (callback: (user: User | null) => void) => {
-  return onAuthStateChanged(auth, callback);
 };

@@ -29,7 +29,7 @@ const formSchema = z.object({
 
 type LoginFormData = z.infer<typeof formSchema>;
 
-function LoginPageClient() {
+export default function LoginPage() {
   const { toast } = useToast();
   const { user, signInUser, isLoading } = useAuth();
   const router = useRouter();
@@ -135,5 +135,3 @@ function LoginPageClient() {
     </div>
   );
 }
-
-export default LoginPageClient;

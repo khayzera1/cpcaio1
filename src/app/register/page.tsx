@@ -29,7 +29,7 @@ const formSchema = z.object({
 
 type RegisterFormData = z.infer<typeof formSchema>;
 
-function RegisterPageClient() {
+export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, signUpUser, isLoading } = useAuth();
@@ -135,5 +135,3 @@ function RegisterPageClient() {
     </div>
   );
 }
-
-export default RegisterPageClient;

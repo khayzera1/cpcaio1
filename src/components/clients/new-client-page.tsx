@@ -21,7 +21,6 @@ import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { addClient } from "@/services/client-service";
 import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
@@ -32,33 +31,17 @@ const formSchema = z.object({
 
 export type NewClientFormData = z.infer<typeof formSchema>;
 
-
-function AuthWrapper({ children }: { children: React.ReactNode }) {
-    const { user, isLoading } = useAuth();
+export default function NewClientPageClient() {
     const router = useRouter();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user, isLoading, addClient } = useAuth();
 
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/login');
         }
     }, [user, isLoading, router]);
-
-    if (isLoading || !user) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-16 w-16 text-primary animate-spin" />
-            </div>
-        );
-    }
-
-    return <>{children}</>;
-}
-
-
-export default function NewClientPageClient() {
-    const router = useRouter();
-    const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const form = useForm<NewClientFormData>({
         resolver: zodResolver(formSchema),
@@ -87,64 +70,70 @@ export default function NewClientPageClient() {
             setIsSubmitting(false);
         }
     }
+    
+    if (isLoading || !user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-16 w-16 text-primary animate-spin" />
+            </div>
+        );
+    }
 
     return (
-        <AuthWrapper>
-            <div className="min-h-screen bg-background text-foreground">
-                <Header />
-                <main className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-2xl mx-auto">
-                        <Card className="shadow-lg border-primary/20">
-                            <CardHeader>
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-3">
-                                        <UserPlus className="h-6 w-6 text-primary"/>
-                                        <CardTitle className="text-2xl">Cadastrar Novo Cliente</CardTitle>
-                                    </div>
-                                    <Link href="/">
-                                        <Button variant="outline">
-                                            <ArrowLeft className="mr-2 h-4 w-4" />
-                                            Voltar
-                                        </Button>
-                                    </Link>
+        <div className="min-h-screen bg-background text-foreground">
+            <Header />
+            <main className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-2xl mx-auto">
+                    <Card className="shadow-lg border-primary/20">
+                        <CardHeader>
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                    <UserPlus className="h-6 w-6 text-primary"/>
+                                    <CardTitle className="text-2xl">Cadastrar Novo Cliente</CardTitle>
                                 </div>
-                                <CardDescription>Preencha as informações abaixo para adicionar um novo cliente.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Form {...form}>
-                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                                        <FormField
-                                            control={form.control}
-                                            name="clientName"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Nome do Cliente</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Ex: Pizzaria do Bairro" {...field} />
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        O nome fantasia ou razão social do cliente.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <div className="flex justify-end gap-4 pt-4">
-                                            <Button type="button" variant="ghost" onClick={() => router.push('/')} disabled={isSubmitting}>
-                                                Cancelar
-                                            </Button>
-                                            <Button type="submit" disabled={isSubmitting}>
-                                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                Salvar Cliente
-                                            </Button>
-                                        </div>
-                                    </form>
-                                </Form>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </main>
-            </div>
-        </AuthWrapper>
+                                <Link href="/">
+                                    <Button variant="outline">
+                                        <ArrowLeft className="mr-2 h-4 w-4" />
+                                        Voltar
+                                    </Button>
+                                </Link>
+                            </div>
+                            <CardDescription>Preencha as informações abaixo para adicionar um novo cliente.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                                    <FormField
+                                        control={form.control}
+                                        name="clientName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Nome do Cliente</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Ex: Pizzaria do Bairro" {...field} />
+                                                </FormControl>
+                                                <FormDescription>
+                                                    O nome fantasia ou razão social do cliente.
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <div className="flex justify-end gap-4 pt-4">
+                                        <Button type="button" variant="ghost" onClick={() => router.push('/')} disabled={isSubmitting}>
+                                            Cancelar
+                                        </Button>
+                                        <Button type="submit" disabled={isSubmitting}>
+                                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Salvar Cliente
+                                        </Button>
+                                    </div>
+                                </form>
+                            </Form>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
+        </div>
     );
 }
