@@ -1,22 +1,21 @@
-
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut,
-  type Auth
+  type Auth,
+  type UserCredential
 } from "firebase/auth";
 
-// Wrappers para as funções de autenticação do Firebase
-// Elas agora recebem a instância 'auth' como parâmetro
+// As funções agora recebem a instância 'auth' como parâmetro.
 
-export const signUp = (auth: Auth, email: string, password: string) => {
+export const signUp = (auth: Auth, email: string, password: string): Promise<UserCredential> => {
   return createUserWithEmailAndPassword(auth, email, password);
 };
 
-export const signIn = (auth: Auth, email: string, password: string) => {
+export const signIn = (auth: Auth, email: string, password: string): Promise<UserCredential> => {
   return signInWithEmailAndPassword(auth, email, password);
 };
 
-export const logOut = (auth: Auth) => {
+export const logOut = (auth: Auth): Promise<void> => {
   return signOut(auth);
 };

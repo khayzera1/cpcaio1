@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { 
@@ -9,16 +8,15 @@ import React, {
     useCallback,
     useMemo
 } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged, getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
 import * as AuthService from '@/services/auth-service';
 import * as ClientService from '@/services/client-service';
 import type { Client } from '@/lib/types';
 import type { NewClientFormData } from '@/app/clients/new/page';
-import { initializeApp, getApps, getApp } from "firebase/app";
 
 // Interface do Contexto
 interface AuthContextType {
@@ -26,12 +24,10 @@ interface AuthContextType {
   clients: Client[] | null;
   isLoading: boolean;
   isClientsLoading: boolean;
-  signInUser: typeof AuthService.signIn;
-  signUpUser: typeof AuthService.signUp;
+  signInUser: (email: string, password: string) => Promise<any>;
+  signUpUser: (email: string, password: string) => Promise<any>;
   signOutUser: () => Promise<void>;
   addClient: (clientData: NewClientFormData) => Promise<string>;
-  auth: Auth;
-  db: Firestore;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,12 +45,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Inicialização do Firebase centralizada aqui
-  const firebaseApp = useMemo(() => {
+  // Inicialização do Firebase centralizada e memoizada.
+  // Isso garante que o Firebase só seja inicializado uma vez e no cliente.
+  const { app, auth, db } = useMemo(() => {
     const apps = getApps();
-    if (apps.length) {
-      return getApp();
-    }
     const firebaseConfig = {
       apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
       authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -63,11 +57,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     };
-    return initializeApp(firebaseConfig);
+    const app: FirebaseApp = apps.length ? getApp() : initializeApp(firebaseConfig);
+    const auth: Auth = getAuth(app);
+    const db: Firestore = getFirestore(app);
+    return { app, auth, db };
   }, []);
-
-  const auth = useMemo(() => getAuth(firebaseApp), [firebaseApp]);
-  const db = useMemo(() => getFirestore(firebaseApp), [firebaseApp]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -140,12 +134,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     signUpUser,
     signOutUser,
     addClient,
-    auth,
-    db,
-  }), [user, clients, isLoading, isClientsLoading, signInUser, signUpUser, signOutUser, addClient, auth, db]);
+  }), [user, clients, isLoading, isClientsLoading, signInUser, signUpUser, signOutUser, addClient]);
 
   const isPublic = publicRoutes.includes(pathname);
-  if (isLoading || (!user && !isPublic) || (user && isPublic)) {
+  if (isLoading || (!user && !isPublic)) {
      return (
        <div className="min-h-screen flex items-center justify-center bg-background">
          <Loader2 className="h-16 w-16 text-primary animate-spin" />

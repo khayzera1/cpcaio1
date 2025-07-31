@@ -1,15 +1,13 @@
-
-import { collection, addDoc, getDocs, query, type Firestore } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, type Firestore, type DocumentReference } from "firebase/firestore";
 import type { Client } from "@/lib/types";
 import type { NewClientFormData } from "@/app/clients/new/page";
 
-
 const CLIENTS_COLLECTION = 'clients';
 
-// Function to add a new client to Firestore, receiving the 'db' instance
+// Função para adicionar um novo cliente, recebendo a instância 'db'.
 export async function addClient(db: Firestore, clientData: NewClientFormData): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, CLIENTS_COLLECTION), {
+    const docRef: DocumentReference = await addDoc(collection(db, CLIENTS_COLLECTION), {
       clientName: clientData.clientName,
       createdAt: new Date(),
     });
@@ -20,7 +18,7 @@ export async function addClient(db: Firestore, clientData: NewClientFormData): P
   }
 }
 
-// Function to get all clients from Firestore, receiving the 'db' instance
+// Função para obter clientes, recebendo a instância 'db'.
 export async function getClients(db: Firestore): Promise<Client[]> {
   try {
     const q = query(collection(db, CLIENTS_COLLECTION));

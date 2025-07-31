@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -48,7 +47,7 @@ export default function LoginPage() {
       toast({
         title: "Login realizado com sucesso!",
       });
-      router.push('/');
+      // O AuthProvider cuidará do redirecionamento
     } catch (error: any) {
       console.error("Failed to sign in:", error);
       const errorMessage = error.code === 'auth/invalid-credential'
