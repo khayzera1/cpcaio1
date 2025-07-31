@@ -11,7 +11,6 @@ import { UserPlus, Users, Search, Contact, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { getClients } from "@/services/client-service";
-import { AuthGuard } from "@/hooks/use-auth";
 
 
 const getInitials = (name: string) => {
@@ -49,7 +48,6 @@ function HomePage() {
   }, [clients, searchTerm]);
 
   return (
-    <AuthGuard>
       <div className="min-h-screen bg-background text-foreground">
         <Header>
           <div className="flex items-center gap-4">
@@ -119,7 +117,6 @@ function HomePage() {
           )}
         </main>
       </div>
-    </AuthGuard>
   );
 }
 
