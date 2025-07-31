@@ -1,30 +1,23 @@
 'use client';
 
-import type { Metadata } from 'next';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster";
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
+import { AuthProviderContent } from '@/hooks/use-auth';
 
-const AuthProvider = dynamic(() => import('@/components/auth-provider'), {
+const AuthGuard = dynamic(() => import('@/components/auth-guard'), {
   ssr: false,
-  loading: () => (
+   loading: () => (
      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-16 w-16 text-primary animate-spin" />
       </div>
   )
 });
 
-const inter = Inter({ subsets: ['latin'] });
 
-// Metadata cannot be exported from a client component, but since this is the root layout,
-// we can manage the title in the <head> tag directly if needed, or keep it static here.
-// For Vercel build, it's safer to remove the export.
-// export const metadata: Metadata = {
-//   title: 'Painel de Clientes',
-//   description: 'Gerado pelo Firebase Studio',
-// };
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
@@ -38,9 +31,11 @@ export default function RootLayout({
         <meta name="description" content="Gerado pelo Firebase Studio" />
       </head>
       <body className="antialiased">
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProviderContent>
+            <AuthGuard>
+              {children}
+            </AuthGuard>
+          </AuthProviderContent>
           <Toaster />
       </body>
     </html>

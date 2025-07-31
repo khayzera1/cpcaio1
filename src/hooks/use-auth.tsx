@@ -36,20 +36,16 @@ const AuthContext = createContext<AuthContextType>({
     clients: null,
 });
 
-// This is the actual hook components will use
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-
-// This is the provider component that will wrap the app
 export const AuthProviderContent = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(); // undefined on initial load
   const [isLoading, setIsLoading] = useState(true);
   const [clients, setClients] = useState<Client[] | null>(null);
   const [isClientsLoading, setIsClientsLoading] = useState(true);
   
-  // Memoize Firebase initialization to prevent re-renders
   const { auth, db } = useMemo(() => {
     const firebaseConfig = {
         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -65,7 +61,6 @@ export const AuthProviderContent = ({ children }: { children: ReactNode }) => {
     return { auth, db };
   }, []);
   
-  // Effect to handle auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -74,7 +69,6 @@ export const AuthProviderContent = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [auth]);
 
-  // Effect to fetch clients when user is logged in
   useEffect(() => {
     if (user) {
       setIsClientsLoading(true);
@@ -86,11 +80,10 @@ export const AuthProviderContent = ({ children }: { children: ReactNode }) => {
         })
         .finally(() => setIsClientsLoading(false));
     } else {
-        setClients(null); // Clear clients on logout
+        setClients(null); 
     }
   }, [user, db]);
   
-  // Memoized auth functions
   const signOutUser = useCallback(async () => {
     try {
       await AuthService.logOut(auth);
@@ -111,8 +104,6 @@ export const AuthProviderContent = ({ children }: { children: ReactNode }) => {
       return AuthService.signUp(auth, email, password);
   }, [auth]);
 
-
-  // The value provided to the context consumers
   const value: AuthContextType = useMemo(() => ({
     user,
     isLoading,
