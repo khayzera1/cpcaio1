@@ -21,22 +21,36 @@ const getInitials = (name: string) => {
     return name.substring(0, 2).toUpperCase();
 };
 
+function AuthWrapper({ children }: { children: React.ReactNode }) {
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !user) {
+            router.push('/login');
+        }
+    }, [user, isLoading, router]);
+
+    if (isLoading || !user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-16 w-16 text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    return <>{children}</>;
+}
+
+
 export default function HomePageClient() {
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFetchingClients, setIsFetchingClients] = useState(true);
-  const { user, isLoading: isAuthLoading } = useAuth();
-  const router = useRouter();
-
+  
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isAuthLoading, router]);
-
-  useEffect(() => {
-    if (user) {
       const fetchClients = async () => {
+        setIsFetchingClients(true);
         try {
           const clientList = await getClients();
           setClients(clientList);
@@ -47,8 +61,7 @@ export default function HomePageClient() {
         }
       };
       fetchClients();
-    }
-  }, [user]);
+  }, []);
 
   const filteredClients = useMemo(() => {
     return clients.filter(client =>
@@ -56,26 +69,11 @@ export default function HomePageClient() {
     );
   }, [clients, searchTerm]);
 
-  if (isAuthLoading || !user) {
-      return (
-          <div className="min-h-screen flex items-center justify-center">
-              <Loader2 className="h-16 w-16 text-primary animate-spin" />
-          </div>
-      );
-  }
 
   return (
+    <AuthWrapper>
       <div className="min-h-screen bg-background text-foreground">
-        <Header>
-          <div className="flex items-center gap-4">
-              <Link href="/clients/new">
-                  <Button>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Adicionar Cliente
-                  </Button>
-              </Link>
-          </div>
-        </Header>
+        <Header />
         <main className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-3">
@@ -85,15 +83,23 @@ export default function HomePageClient() {
                 <p className="text-muted-foreground">Gerencie seus clientes.</p>
               </div>
             </div>
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar cliente..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+             <div className="flex items-center gap-4">
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar cliente..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+               <Link href="/clients/new">
+                  <Button>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Adicionar Cliente
+                  </Button>
+              </Link>
+          </div>
           </div>
 
           {isFetchingClients ? (
@@ -134,5 +140,6 @@ export default function HomePageClient() {
           )}
         </main>
       </div>
+    </AuthWrapper>
   );
 }

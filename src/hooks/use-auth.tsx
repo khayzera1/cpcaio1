@@ -1,40 +1,71 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { 
+    useState, 
+    useEffect, 
+    createContext, 
+    useContext, 
+    ReactNode,
+    useCallback
+} from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthChange, signIn as signInService, logOut as signOutService, signUp as signUpService } from '@/services/auth-service';
+import { 
+    onAuthChange, 
+    signIn as signInService, 
+    logOut as signOutService, 
+    signUp as signUpService 
+} from '@/services/auth-service';
 
-// Este hook agora é a única fonte de verdade para o estado de autenticação.
-// Ele só é executado no lado do cliente.
-export const useAuth = () => {
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  signInUser: typeof signInService;
+  signUpUser: typeof signUpService;
+  signOutUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    // onAuthChange se inscreve no estado de autenticação do Firebase.
-    // O callback só é chamado no cliente, evitando problemas de SSR.
     const unsubscribe = onAuthChange((user) => {
       setUser(user);
       setIsLoading(false);
     });
-
-    // Retorna a função de limpeza para se desinscrever quando o componente desmontar.
     return () => unsubscribe();
   }, []);
+  
+  const signOutUser = useCallback(async () => {
+    try {
+      await signOutService();
+      // O redirecionamento será tratado pela página ou pelo AuthGuard
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  }, []);
 
-  const signOutUser = async () => {
-    await signOutService();
-    // Após o logout, redireciona para a página de login.
-    router.push('/login');
-  };
-
-  return {
+  const value = {
     user,
     isLoading,
     signInUser: signInService,
     signUpUser: signUpService,
     signOutUser,
   };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
