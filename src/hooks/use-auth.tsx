@@ -4,12 +4,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { User } from 'firebase/auth';
-import { onAuthChange, signIn, signUp, logOut } from '@/services/auth-service';
+import { onAuthChange, signIn, logOut, signUp } from '@/services/auth-service';
 import { Loader2 } from 'lucide-react';
-import LoginPage from '@/app/login/page';
-import RegisterPage from '@/app/register/page';
 
-
+// Context to provide auth state and functions
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -20,42 +18,38 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// AuthProvider that will wrap the application
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
+    // onAuthChange returns an unsubscribe function
     const unsubscribe = onAuthChange((user) => {
       setUser(user);
       setIsLoading(false);
     });
+
+    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
-  const signInUser = (email: string, password: string) => {
-    return signIn(email, password);
+  const value = {
+    user,
+    isLoading,
+    signInUser: signIn,
+    signUpUser: signUp,
+    signOutUser: logOut,
   };
-
-  const signUpUser = (email: string, password: string) => {
-    return signUp(email, password);
-  };
-
-  const signOutUser = async () => {
-    await logOut();
-    // O redirecionamento pode ser gerenciado pelo AuthGuard
-  };
-  
-  const value = { user, isLoading, signInUser, signUpUser, signOutUser };
 
   return (
     <AuthContext.Provider value={value}>
-        <AuthGuard>{children}</AuthGuard>
+        {children}
     </AuthContext.Provider>
   );
 }
 
+// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -64,29 +58,35 @@ export const useAuth = () => {
   return context;
 };
 
+
+// AuthGuard component to protect routes
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const publicPaths = ['/login', '/register'];
   const isPublicPath = publicPaths.includes(pathname);
 
   useEffect(() => {
-    if (isLoading) {
-      return; // Não faça nada enquanto carrega
+    if (!isClient || isLoading) {
+      return; // Don't do anything until loading is false and we are on the client
     }
 
     if (!user && !isPublicPath) {
-      // Se não há usuário e a rota não é pública, redireciona para o login
       router.push('/login');
     } else if (user && isPublicPath) {
-      // Se há um usuário e ele tenta acessar o login/register, redireciona para a home
       router.push('/');
     }
-  }, [user, isLoading, isPublicPath, router, pathname]);
-  
-  if (isLoading) {
+  }, [user, isLoading, isPublicPath, router, pathname, isClient]);
+
+  // While loading or on the server, show a loader to prevent flicker
+  if (isLoading || !isClient) {
      return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-16 w-16 text-primary animate-spin" />
@@ -94,29 +94,16 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  // Se o usuário não estiver logado e a rota não for pública, o useEffect já terá redirecionado.
-  // Renderiza um loader ou null para evitar piscar de conteúdo.
-  if (!user && !isPublicPath) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
-      </div>
-    );
-  }
-  
-  // Permite o acesso a rotas públicas
-  if (isPublicPath) {
-    return <>{children}</>;
-  }
-  
-  // Se o usuário estiver logado, mostra o conteúdo protegido
-  if(user) {
+  // If we are on a public path, or if the user is authenticated, show the children
+  if (isPublicPath || user) {
     return <>{children}</>;
   }
 
+  // Otherwise, the user is not authenticated and on a private page.
+  // The useEffect above will redirect, so we show a loader in the meantime.
   return (
     <div className="min-h-screen flex items-center justify-center">
       <Loader2 className="h-16 w-16 text-primary animate-spin" />
     </div>
-  )
+  );
 }
