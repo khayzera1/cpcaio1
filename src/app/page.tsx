@@ -4,12 +4,14 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
-import { type ClientData } from "@/lib/types";
+import type { Client } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowRight, Users, Search, Contact } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserPlus, ArrowRight, Users, Search, Contact, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { getClients } from "@/services/client-service";
+
 
 const getInitials = (name: string) => {
     const names = name.split(' ');
@@ -19,20 +21,24 @@ const getInitials = (name: string) => {
     return name.substring(0, 2).toUpperCase();
 };
 
-const getInitialData = (): ClientData[] => {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-  const savedData = localStorage.getItem('clientData');
-  return savedData ? JSON.parse(savedData) : [];
-};
 
 export default function Home() {
-  const [clients, setClients] = useState<ClientData[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setClients(getInitialData());
+    const fetchClients = async () => {
+      try {
+        const clientList = await getClients();
+        setClients(clientList);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchClients();
   }, []);
 
   const filteredClients = useMemo(() => {
@@ -73,7 +79,11 @@ export default function Home() {
           </div>
         </div>
         
-        {filteredClients.length > 0 ? (
+        {isLoading ? (
+           <div className="flex justify-center items-center py-20">
+             <Loader2 className="h-16 w-16 text-primary animate-spin" />
+           </div>
+        ) : filteredClients.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredClients.map((client) => (
               <Card key={client.id} className="overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 border-l-4 border-primary">
