@@ -1,7 +1,6 @@
-import { collection, addDoc, getDocs, query, type Firestore, type DocumentReference, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, type Firestore, type DocumentReference, serverTimestamp, orderBy } from "firebase/firestore";
 import type { Client } from "@/lib/types";
 
-// O nome do tipo foi corrigido de NewClientFormData para ClientFormData para consistência
 export interface ClientFormData {
   clientName: string;
 }
@@ -12,7 +11,7 @@ const CLIENTS_COLLECTION = 'clients';
 export async function addClient(db: Firestore, clientData: ClientFormData): Promise<string> {
   try {
     const docRef: DocumentReference = await addDoc(collection(db, CLIENTS_COLLECTION), {
-      clientName: clientData.clientName,
+      ...clientData,
       createdAt: serverTimestamp(),
     });
     return docRef.id;
@@ -25,7 +24,7 @@ export async function addClient(db: Firestore, clientData: ClientFormData): Prom
 // Função para obter clientes, recebendo a instância 'db'.
 export async function getClients(db: Firestore): Promise<Client[]> {
   try {
-    const q = query(collection(db, CLIENTS_COLLECTION));
+    const q = query(collection(db, CLIENTS_COLLECTION), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     const clients: Client[] = [];
     querySnapshot.forEach((doc) => {

@@ -6,7 +6,7 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
-// Importa a configuração do Firebase SOMENTE AQUI
+// Importa a configuração do Firebase SOMENTE AQUI, neste componente de cliente.
 import { auth, db } from '@/lib/firebase/client'; 
 
 import * as AuthService from '@/services/auth-service';
@@ -40,7 +40,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // onAuthStateChanged é seguro para usar no cliente
+    // onAuthStateChanged só é executado no cliente, o que é seguro.
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setIsLoading(false);
@@ -52,6 +52,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       setIsClientsLoading(true);
       try {
+        // Passa a instância 'db' para o serviço.
         const fetchedClients = await ClientService.getClients(db);
         setClients(fetchedClients);
       } catch (error) {
@@ -71,8 +72,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchClients]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading) return; // Não faz nada até a verificação inicial de auth terminar.
+
     const isPublic = publicRoutes.includes(pathname);
+
     if (!user && !isPublic) {
       router.push('/login');
     } else if (user && isPublic) {
@@ -90,11 +93,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOutUser = useCallback(async () => {
     await AuthService.logOut(auth);
-    setClients(null); // Limpa os clientes no logout
+    setClients(null); 
     router.push('/login');
   }, [router]);
 
   const addClient = useCallback(async (clientData: ClientFormData) => {
+    // Passa a instância 'db' para o serviço.
     const newClientId = await ClientService.addClient(db, clientData);
     await fetchClients(); // Re-busca os clientes para atualizar a lista
     return newClientId;
@@ -112,7 +116,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }), [user, clients, isLoading, isClientsLoading, signInUser, signUpUser, signOutUser, addClient]);
 
   // Exibe um loader global enquanto a verificação inicial de auth está acontecendo
-  // ou enquanto redireciona um usuário não autenticado.
+  // ou enquanto redireciona.
   const isPublic = publicRoutes.includes(pathname);
   if (isLoading || (!user && !isPublic)) {
     return (

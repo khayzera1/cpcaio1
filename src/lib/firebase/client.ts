@@ -1,4 +1,4 @@
-// /src/lib/firebase/client.ts
+// src/lib/firebase/client.ts
 // ATENÇÃO: ESTE ARQUIVO SÓ DEVE SER IMPORTADO EM COMPONENTES 'use client'.
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
@@ -14,7 +14,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Inicializa o Firebase no lado do cliente
+// Inicializa o Firebase no lado do cliente de forma segura.
 const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
