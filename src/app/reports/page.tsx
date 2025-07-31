@@ -11,6 +11,7 @@ import { generatePdf } from "@/lib/pdf-utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { AuthGuard } from "@/hooks/use-auth";
 
 function ReportsPageContent() {
     const searchParams = useSearchParams();
@@ -29,38 +30,42 @@ function ReportsPageContent() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <Header>
-                <Link href="/">
-                    <Button variant="outline">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Voltar para Clientes
-                    </Button>
-                </Link>
-            </Header>
-            <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                {reportData ? (
-                    <ReportPreview 
-                        data={reportData} 
-                        onGeneratePdf={handlePdfGeneration}
-                        onCancel={handleReset}
-                        clientName={clientName}
-                    />
-                ) : (
-                    <CsvUploader 
-                        onReportGenerated={setReportData}
-                        clientName={clientName} 
-                    />
-                )}
-            </main>
-        </div>
+        <AuthGuard>
+            <div className="min-h-screen bg-background text-foreground">
+                <Header>
+                    <Link href="/">
+                        <Button variant="outline">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Voltar para Clientes
+                        </Button>
+                    </Link>
+                </Header>
+                <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    {reportData ? (
+                        <ReportPreview 
+                            data={reportData} 
+                            onGeneratePdf={handlePdfGeneration}
+                            onCancel={handleReset}
+                            clientName={clientName}
+                        />
+                    ) : (
+                        <CsvUploader 
+                            onReportGenerated={setReportData}
+                            clientName={clientName} 
+                        />
+                    )}
+                </main>
+            </div>
+        </AuthGuard>
     );
 }
 
-export default function ReportsPage() {
+function ReportsPage() {
     return (
         <Suspense fallback={<div>Carregando...</div>}>
             <ReportsPageContent />
         </Suspense>
     );
 }
+
+export default ReportsPage;
