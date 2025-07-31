@@ -7,7 +7,7 @@ import { Header } from "@/components/header";
 import type { Client } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowRight, Users, Search, Contact, Loader2 } from "lucide-react";
+import { UserPlus, Users, Search, Contact, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { getClients } from "@/services/client-service";
@@ -67,7 +67,7 @@ function HomePage() {
               <Contact className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Feed de Clientes</h1>
-                <p className="text-muted-foreground">Gerencie seus clientes e gere relatórios.</p>
+                <p className="text-muted-foreground">Gerencie seus clientes.</p>
               </div>
             </div>
             <div className="relative w-full max-w-sm">
@@ -94,12 +94,6 @@ function HomePage() {
                             <AvatarFallback className="bg-primary/20 text-primary font-bold">{getInitials(client.clientName)}</AvatarFallback>
                         </Avatar>
                         <p className="text-lg font-semibold text-card-foreground">{client.clientName}</p>
-                        <Link href={`/reports?clientName=${encodeURIComponent(client.clientName)}`}>
-                            <Button variant="ghost" size="sm">
-                                Gerar Relatório
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                        </Link>
                     </CardContent>
                 </Card>
               ))}
