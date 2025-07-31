@@ -18,8 +18,9 @@ import * as AuthService from '@/services/auth-service';
 import * as ClientService from '@/services/client-service';
 import type { Client } from '@/lib/types';
 import type { NewClientFormData } from '@/app/clients/new/page';
-import { auth, db } from '@/lib/firebase-config'; // Import directly
+import { initializeApp, getApps, getApp } from "firebase/app";
 
+// Interface do Contexto
 interface AuthContextType {
   user: User | null;
   clients: Client[] | null;
@@ -29,12 +30,16 @@ interface AuthContextType {
   signUpUser: typeof AuthService.signUp;
   signOutUser: () => Promise<void>;
   addClient: (clientData: NewClientFormData) => Promise<string>;
+  auth: Auth;
+  db: Firestore;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Rotas públicas que não exigem autenticação
 const publicRoutes = ['/login', '/register'];
 
+// Componente Provedor
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [clients, setClients] = useState<Client[] | null>(null);
@@ -44,13 +49,33 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Inicialização do Firebase centralizada aqui
+  const firebaseApp = useMemo(() => {
+    const apps = getApps();
+    if (apps.length) {
+      return getApp();
+    }
+    const firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
+    return initializeApp(firebaseConfig);
+  }, []);
+
+  const auth = useMemo(() => getAuth(firebaseApp), [firebaseApp]);
+  const db = useMemo(() => getFirestore(firebaseApp), [firebaseApp]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const fetchClients = useCallback(async () => {
     if (user) {
@@ -68,7 +93,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setClients(null);
       setIsClientsLoading(false);
     }
-  }, [user]);
+  }, [user, db]);
 
   useEffect(() => {
     fetchClients();
@@ -88,22 +113,23 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOutUser = useCallback(async () => {
     await AuthService.logOut(auth);
+    setClients(null);
     router.push('/login');
-  }, [router]);
+  }, [auth, router]);
 
   const addClient = useCallback(async (clientData: NewClientFormData) => {
     const newClientId = await ClientService.addClient(db, clientData);
-    await fetchClients();
+    await fetchClients(); // Re-fetch clients after adding a new one
     return newClientId;
-  }, [fetchClients]);
+  }, [db, fetchClients]);
   
   const signInUser = useCallback((email:string, password:string) => {
     return AuthService.signIn(auth, email, password);
-  }, []);
+  }, [auth]);
 
   const signUpUser = useCallback((email:string, password:string) => {
     return AuthService.signUp(auth, email, password);
-  }, []);
+  }, [auth]);
 
   const value = useMemo(() => ({
     user,
@@ -114,10 +140,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     signUpUser,
     signOutUser,
     addClient,
-  }), [user, clients, isLoading, isClientsLoading, signInUser, signUpUser, signOutUser, addClient]);
+    auth,
+    db,
+  }), [user, clients, isLoading, isClientsLoading, signInUser, signUpUser, signOutUser, addClient, auth, db]);
 
-  const isAuthRoute = publicRoutes.includes(pathname);
-  if (isLoading || (!user && !isAuthRoute) || (user && isAuthRoute)) {
+  const isPublic = publicRoutes.includes(pathname);
+  if (isLoading || (!user && !isPublic) || (user && isPublic)) {
      return (
        <div className="min-h-screen flex items-center justify-center bg-background">
          <Loader2 className="h-16 w-16 text-primary animate-spin" />
