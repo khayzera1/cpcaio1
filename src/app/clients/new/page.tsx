@@ -22,14 +22,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from '@/hooks/use-auth';
+import type { ClientFormData } from "@/services/client-service";
 
 const formSchema = z.object({
   clientName: z.string().min(2, {
     message: "O nome do cliente deve ter pelo menos 2 caracteres.",
   }),
 });
-
-export type NewClientFormData = z.infer<typeof formSchema>;
 
 export default function NewClientPage() {
     const router = useRouter();
@@ -38,14 +37,14 @@ export default function NewClientPage() {
     const { user, signOutUser, addClient } = useAuth();
 
 
-    const form = useForm<NewClientFormData>({
+    const form = useForm<ClientFormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             clientName: "",
         },
     });
 
-    async function onSubmit(values: NewClientFormData) {
+    async function onSubmit(values: ClientFormData) {
         setIsSubmitting(true);
         try {
             await addClient(values);

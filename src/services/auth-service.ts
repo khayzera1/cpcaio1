@@ -6,7 +6,8 @@ import {
   type UserCredential
 } from "firebase/auth";
 
-// As funções agora recebem a instância 'auth' como parâmetro.
+// As funções agora recebem a instância 'auth' como parâmetro,
+// evitando a importação direta da configuração.
 
 export const signUp = (auth: Auth, email: string, password: string): Promise<UserCredential> => {
   return createUserWithEmailAndPassword(auth, email, password);

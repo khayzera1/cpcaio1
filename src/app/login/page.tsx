@@ -31,8 +31,7 @@ type LoginFormData = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const { toast } = useToast();
   const { signInUser } = useAuth();
-  const router = useRouter();
-
+  
   const form = useForm<LoginFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {

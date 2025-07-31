@@ -1,15 +1,19 @@
-import { collection, addDoc, getDocs, query, type Firestore, type DocumentReference } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, type Firestore, type DocumentReference, serverTimestamp } from "firebase/firestore";
 import type { Client } from "@/lib/types";
-import type { NewClientFormData } from "@/app/clients/new/page";
+
+// O nome do tipo foi corrigido de NewClientFormData para ClientFormData para consistência
+export interface ClientFormData {
+  clientName: string;
+}
 
 const CLIENTS_COLLECTION = 'clients';
 
 // Função para adicionar um novo cliente, recebendo a instância 'db'.
-export async function addClient(db: Firestore, clientData: NewClientFormData): Promise<string> {
+export async function addClient(db: Firestore, clientData: ClientFormData): Promise<string> {
   try {
     const docRef: DocumentReference = await addDoc(collection(db, CLIENTS_COLLECTION), {
       clientName: clientData.clientName,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
     });
     return docRef.id;
   } catch (e) {
